@@ -11,7 +11,7 @@ class FreeImageConan(ConanFile):
     license = "FIPL(http://freeimage.sourceforge.net/freeimage-license.txt)", "GPLv2", "GPLv3"
     description = "Open source image loading library"
 
-    url     = "https://github.com/paulobrizolara/freeimage-conan"
+    url     = "https://github.com/sixten-hilborn/freeimage-conan"
     generators = "cmake"
     settings = "os", "compiler", "arch"
 
