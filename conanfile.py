@@ -34,8 +34,7 @@ class FreeImageConan(ConanFile):
     FILE_SHA = 'fbfc65e39b3d4e2cb108c4ffa8c41fd02c07d4d436c594fff8dab1a6d5297f89'
 
     def configure(self):
-        if self.settings.compiler == "Visual Studio":
-            self.options.use_cxx_wrapper = False
+        self.options.use_cxx_wrapper = False
 
     def source(self):
         zip_name = self.name + ".zip"
@@ -48,28 +47,12 @@ class FreeImageConan(ConanFile):
         self.apply_patches()
             
     def build(self):
-        if self.settings.os == "Windows" and self.settings.compiler == "Visual Studio":
-            cmake = CMake(self.settings)
-            cd_build = 'cd ' + self.UNZIPPED_DIR
-            options = ''
-            self.print_and_run('%s && cmake . %s %s' % (cd_build, cmake.command_line, options))
-            self.print_and_run("%s && cmake --build . %s" % (cd_build, cmake.build_config))
-        else:
-            env = ConfigureEnvironment(self)
-            make_env = self.make_env()
-            env_line = "%s %s " % (env.command_line, make_env)
-
-            self.make_and_install(env_line)
-
-            if self.options.use_cxx_wrapper:
-                self.make_and_install(env_line, "-f Makefile.fip")
+        cmake = CMake(self.settings)
+        cd_build = 'cd ' + self.UNZIPPED_DIR
+        options = ''
+        self.print_and_run('%s && cmake . %s %s' % (cd_build, cmake.command_line, options))
+        self.print_and_run("%s && cmake --build . %s" % (cd_build, cmake.build_config))
                
-    def make_and_install(self, env_line, options=""):
-        make_cmd = "%s make %s" % (env_line, options)
-     
-        self.print_and_run(make_cmd               , cwd=self.UNZIPPED_DIR)
-        self.print_and_run(make_cmd + " install"  , cwd=self.UNZIPPED_DIR)
-
     def package(self):
         include_dir = path.join(self.UNZIPPED_DIR, 'Source')
         self.copy("FreeImage.h", dst="include", src=include_dir)
