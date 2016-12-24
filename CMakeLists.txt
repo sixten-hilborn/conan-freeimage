@@ -1,6 +1,8 @@
 project(FreeImage)
 cmake_minimum_required(VERSION 2.8)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 set(FreeImage_SOURCES
 	Source/CacheFile.h
 	Source/DeprecationManager/Deprecated.cpp
@@ -583,6 +585,7 @@ set(FreeImage_SOURCES
 )
 
 # need include directories for FreeImage and all the sub libs
+include_directories(.)
 include_directories(Source)
 include_directories(Source/FreeImageToolkit)
 include_directories(Source/LibJPEG)
