@@ -13,7 +13,7 @@ class FreeImageConan(ConanFile):
 
     url     = "https://github.com/sixten-hilborn/freeimage-conan"
     generators = "cmake"
-    settings = "os", "compiler", "arch"
+    settings = "os", "compiler", "arch", "build_type"
 
     options = {
         "shared"          : [True, False],
@@ -35,6 +35,7 @@ class FreeImageConan(ConanFile):
 
     def configure(self):
         self.options.use_cxx_wrapper = False
+        self.settings.build_type = None
 
     def source(self):
         zip_name = self.name + ".zip"
@@ -66,6 +67,8 @@ class FreeImageConan(ConanFile):
 
         if self.options.use_cxx_wrapper:
             self.cpp_info.libs.append("freeimageplus")
+        if not self.options.shared:
+            self.cpp_info.defines.append("FREEIMAGE_LIB")
 
     ################################ Helpers ######################################
 
