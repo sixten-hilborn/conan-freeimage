@@ -35,7 +35,6 @@ class FreeImageConan(ConanFile):
 
     def configure(self):
         self.options.use_cxx_wrapper = False
-        self.settings.build_type = None
 
     def source(self):
         zip_name = self.name + ".zip"
@@ -63,7 +62,7 @@ class FreeImageConan(ConanFile):
         self.copy("*.dll", dst="bin", src=self.UNZIPPED_DIR, keep_path=False)
 
     def package_info(self):
-        self.cpp_info.libs      = ["freeimage"]
+        self.cpp_info.libs      = ["FreeImage"]
 
         if self.options.use_cxx_wrapper:
             self.cpp_info.libs.append("freeimageplus")
