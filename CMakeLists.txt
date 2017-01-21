@@ -1,6 +1,9 @@
 project(FreeImage)
 cmake_minimum_required(VERSION 2.8)
 
+include(../conanbuildinfo.cmake)
+conan_basic_setup()
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(FreeImage_SOURCES
