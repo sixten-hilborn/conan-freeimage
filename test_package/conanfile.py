@@ -1,34 +1,34 @@
-from conans import ConanFile, CMake
+from conans.model.conan_file import ConanFile
+from conans import CMake
 import os
 from os import path
 
-username = os.getenv("CONAN_USERNAME", "paulobrizolara")
-channel = os.getenv("CONAN_CHANNEL", "testing")
-version = "3.17.0"
-package = "freeimage"
 
-class TestConan(ConanFile):
-    settings = "os", "compiler", "build_type", "arch"
-    requires = "%s/%s@%s/%s" % (package, version, username, channel)
+############### CONFIGURE THESE VALUES ##################
+default_user = "hilborn"
+default_channel = "stable"
+#########################################################
+
+channel = os.getenv("CONAN_CHANNEL", default_channel)
+username = os.getenv("CONAN_USERNAME", default_user)
+
+
+class DefaultNameConan(ConanFile):
+    name = "DefaultName"
+    version = "0.1"
+    settings = "os", "compiler", "arch", "build_type"
     generators = "cmake"
+    requires = "freeimage/3.17.0@%s/%s" % (username, channel)
 
     def build(self):
         cmake = CMake(self.settings)
-
-        configure_cmd = 'cmake "%s" %s' % (self.conanfile_directory, cmake.command_line)
-        self.output.info(configure_cmd)
-        self.run(configure_cmd)
-
-        build_cmd = "cmake --build . %s" % cmake.build_config
-        self.output.info(build_cmd)
-        self.run(build_cmd)
+        self.run('cmake %s %s' % (self.conanfile_directory, cmake.command_line))
+        self.run("cmake --build . %s" % cmake.build_config)
 
     def imports(self):
-        self.copy("*.dll", "bin", "bin")
-        self.copy("*.dylib", "bin", "bin")
-
+        self.copy(pattern="*.dll", dst="bin", src="bin")
+        self.copy(pattern="*.dylib", dst="bin", src="lib")
+        
     def test(self):
-        self.output.info("running from: " + os.getcwd())
-        exec_path = path.join("bin","example") 
         img_path = path.join(self.conanfile_directory, "test.png")
-        self.run("%s %s" % (exec_path, img_path))
+        self.run("cd bin && .%sexample %s" % (os.sep, img_path))
