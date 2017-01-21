@@ -1,5 +1,4 @@
 #include <FreeImage.h>
-#include <FreeImagePlus.h>
 
 #include <string>
 #include <iostream>
