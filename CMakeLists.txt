@@ -1,5 +1,5 @@
 project(FreeImage)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.12)
 
 include(../conanbuildinfo.cmake)
 conan_basic_setup()
@@ -618,6 +618,12 @@ if (APPLE)
   set_target_properties(FreeImage PROPERTIES XCODE_ATTRIBUTE_GCC_THUMB_SUPPORT "NO")
  endif()
 endif()
+
+# With -std=c++11 (default from GCC 6.1) or higher, GCC fails to compile due to an invalid narrowing conversion
+if (CMAKE_COMPILER_IS_GNUCXX)
+  target_compile_options(FreeImage PUBLIC -Wno-narrowing)
+endif()
+
 
 set(FreeImage_INCLUDE_DIR "${FreeImage_SOURCE_DIR}/Source" CACHE PATH "" FORCE)
 set(FreeImage_LIBRARY_DBG FreeImage CACHE STRING "" FORCE)
