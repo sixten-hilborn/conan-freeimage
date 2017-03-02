@@ -24,9 +24,11 @@ set(FreeImage_SOURCES
 	Source/FreeImage/Conversion32.cpp
     Source/FreeImage/ConversionFloat.cpp
     Source/FreeImage/ConversionRGB16.cpp
+    Source/FreeImage/ConversionRGBA16.cpp
 	Source/FreeImage/Conversion4.cpp
 	Source/FreeImage/Conversion8.cpp
 	Source/FreeImage/ConversionRGBF.cpp
+    Source/FreeImage/ConversionRGBAF.cpp
 	Source/FreeImage/ConversionType.cpp
     Source/FreeImage/ConversionUINT16.cpp
 	Source/FreeImage/FreeImage.cpp
