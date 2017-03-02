@@ -6,12 +6,12 @@ from shutil import copy, copyfile
 
 
 class FreeImageConan(ConanFile):
-    name    = "freeimage"
+    name = "freeimage"
     version = "3.17.0"
     license = "FIPL(http://freeimage.sourceforge.net/freeimage-license.txt)", "GPLv2", "GPLv3"
     description = "Open source image loading library"
 
-    url     = "https://github.com/sixten-hilborn/freeimage-conan"
+    url = "https://github.com/sixten-hilborn/freeimage-conan"
     generators = "cmake"
     settings = "os", "compiler", "arch", "build_type"
 
@@ -26,10 +26,10 @@ class FreeImageConan(ConanFile):
 
     exports = ("CMakeLists.txt", "patches/*")
 
-    #Downloading from sourceforge
+    # Downloading from sourceforge
     REPO = "http://downloads.sourceforge.net/project/freeimage/"
     DOWNLOAD_LINK = REPO + "Source%20Distribution/3.17.0/FreeImage3170.zip"
-    #Folder inside the zip
+    # Folder inside the zip
     UNZIPPED_DIR = "FreeImage"
     FILE_SHA = 'fbfc65e39b3d4e2cb108c4ffa8c41fd02c07d4d436c594fff8dab1a6d5297f89'
 
@@ -45,24 +45,26 @@ class FreeImageConan(ConanFile):
         os.unlink(zip_name)
 
         self.apply_patches()
-            
+
     def build(self):
         cmake = CMake(self.settings)
-        cd_build = 'cd ' + self.UNZIPPED_DIR
-        options = ''
-        self.print_and_run('%s && cmake . %s %s' % (cd_build, cmake.command_line, options))
-        self.print_and_run("%s && cmake --build . %s" % (cd_build, cmake.build_config))
-               
+        options = {
+            'BUILD_SHARED_LIBS': self.options.shared
+        }
+        cmake.configure(self, build_dir=self.UNZIPPED_DIR, source_dir='.', defs=options)
+        cmake.build(self)
+
     def package(self):
         include_dir = path.join(self.UNZIPPED_DIR, 'Source')
         self.copy("FreeImage.h", dst="include", src=include_dir)
         self.copy("*.lib", dst="lib", src=self.UNZIPPED_DIR, keep_path=False)
         self.copy("*.a", dst="lib", src=self.UNZIPPED_DIR, keep_path=False)
         self.copy("*.so", dst="lib", src=self.UNZIPPED_DIR, keep_path=False)
+        self.copy("*.dylib", dst="lib", src=self.UNZIPPED_DIR, keep_path=False)
         self.copy("*.dll", dst="bin", src=self.UNZIPPED_DIR, keep_path=False)
 
     def package_info(self):
-        self.cpp_info.libs      = ["FreeImage"]
+        self.cpp_info.libs = ["FreeImage"]
 
         if self.options.use_cxx_wrapper:
             self.cpp_info.libs.append("freeimageplus")
@@ -71,37 +73,9 @@ class FreeImageConan(ConanFile):
 
     ################################ Helpers ######################################
 
-    def print_and_run(self, cmd, **kw):
-        cwd_ = "[%s] " % kw.get('cwd') if 'cmd' in kw else ''
-        
-        self.output.info(cwd_ + str(cmd))
-        self.run(cmd, **kw)
-        
-    def make_env(self):
-        env = []
-        
-        if self.options.shared: #valid only for modified makefiles
-            env.append("USE_SHARED=1")
-        
-        if not hasattr(self, 'package_folder'):
-            self.package_folder = "dist"
-        
-        if self.settings.os == "Android":
-            env.append("NO_SWAB=1")
-        
-        env.append("DESTDIR=" + self.package_folder)
-        env.append("INCDIR=" + path.join(self.package_folder, "include"))
-        env.append("INSTALLDIR=" + path.join(self.package_folder, "lib"))
-            
-        return " ".join(env)
-
-    def rename_file(self, dir, filename, newname):
-        os.rename(path.join(dir, filename), path.join(dir, newname))
-
-
     def apply_patches(self):
         self.output.info("Applying patches")
-        
+
         #Copy "patch" files
         copy('CMakeLists.txt', self.UNZIPPED_DIR)
         self.copy_tree("patches", self.UNZIPPED_DIR)

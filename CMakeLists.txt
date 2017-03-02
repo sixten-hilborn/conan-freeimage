@@ -1,6 +1,8 @@
 project(FreeImage)
 cmake_minimum_required(VERSION 2.8.12)
 
+option(BUILD_SHARED_LIBS "Build shared library if true, else build static library" OFF)
+
 include(../conanbuildinfo.cmake)
 conan_basic_setup()
 
@@ -605,8 +607,13 @@ include_directories(Source/OpenEXR/IlmThread)
 include_directories(Source/OpenEXR/Imath)
 include_directories(Source/ZLib)
 
-add_definitions(-DOPJ_STATIC -DLIBRAW_NODLL -DLIBRAW_LIBRARY_BUILD -DFREEIMAGE_LIB -DNO_LCMS -DUSE_JPIP)
-add_library(FreeImage STATIC ${FreeImage_SOURCES})
+add_definitions(-DLIBRAW_LIBRARY_BUILD -DNO_LCMS -DUSE_JPIP)
+if(BUILD_SHARED_LIBS)
+	add_definitions(-DOPJ_STATIC -DLIBRAW_NODLL -DFREEIMAGE_LIB)
+else()
+	add_definitions(-DFREEIMAGE_EXPORTS)
+endif()
+add_library(FreeImage ${FreeImage_SOURCES})
 if (OGRE_PROJECT_FOLDERS)
 	set_property(TARGET FreeImage PROPERTY FOLDER Dependencies)
 endif ()
