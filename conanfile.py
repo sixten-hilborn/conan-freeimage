@@ -44,9 +44,8 @@ class FreeImageConan(ConanFile):
         unzip(zip_name)
         os.unlink(zip_name)
 
-        self.apply_patches()
-
     def build(self):
+        self.apply_patches()
         cmake = CMake(self.settings)
         options = {
             'BUILD_SHARED_LIBS': self.options.shared
@@ -99,7 +98,7 @@ class FreeImageConan(ConanFile):
             path.join(librawlite, "internal", "defines.h")
         ]
         replaced_include = '\n'.join(('#include <unistd.h>', '#include "swab.h"'))
-        
+
         for f in missing_swab_files:
             self.output.info("patching file '%s'" % f)
             replace_in_file(f, "#include <unistd.h>", replaced_include)
