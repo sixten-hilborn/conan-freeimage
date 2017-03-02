@@ -508,10 +508,10 @@ set(FreeImage_SOURCES
 	Source/OpenEXR/IlmImf/ImfZip.h
 	Source/OpenEXR/IlmImf/ImfZipCompressor.cpp
 	Source/OpenEXR/IlmImf/ImfZipCompressor.h
-	Source/OpenEXR/IlmImf/b44ExpLogTable.cpp
-	Source/OpenEXR/IlmImf/b44ExpLogTable.h
-	Source/OpenEXR/IlmImf/dwaLookups.cpp
-	Source/OpenEXR/IlmImf/dwaLookups.h
+	#Source/OpenEXR/IlmImf/b44ExpLogTable.cpp
+	#Source/OpenEXR/IlmImf/b44ExpLogTable.h
+	#Source/OpenEXR/IlmImf/dwaLookups.cpp
+	#Source/OpenEXR/IlmImf/dwaLookups.h
 	Source/OpenEXR/IlmThread/IlmThread.cpp
 	Source/OpenEXR/IlmThread/IlmThread.h
 	Source/OpenEXR/IlmThread/IlmThreadMutex.cpp
