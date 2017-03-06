@@ -616,21 +616,19 @@ else()
 	add_definitions(-DFREEIMAGE_LIB)
 endif()
 add_library(FreeImage ${FreeImage_SOURCES})
-if (OGRE_PROJECT_FOLDERS)
-	set_property(TARGET FreeImage PROPERTY FOLDER Dependencies)
-endif ()
 
 if (APPLE)
- set_target_properties(FreeImage PROPERTIES XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO")
+	set_target_properties(FreeImage PROPERTIES XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO")
 
- if(OGRE_BUILD_PLATFORM_APPLE_IOS)
-  set_target_properties(FreeImage PROPERTIES XCODE_ATTRIBUTE_GCC_THUMB_SUPPORT "NO")
- endif()
+	if(IOS)
+		set_target_properties(FreeImage PROPERTIES XCODE_ATTRIBUTE_GCC_THUMB_SUPPORT "NO")
+	endif()
 endif()
 
 # With -std=c++11 (default from GCC 6.1) or higher, GCC fails to compile due to an invalid narrowing conversion
+# Also remove std::auto_ptr deprecation messages
 if (CMAKE_COMPILER_IS_GNUCXX)
-  target_compile_options(FreeImage PUBLIC -Wno-narrowing)
+	target_compile_options(FreeImage PUBLIC -Wno-narrowing -Wno-deprecated)
 endif()
 
 
