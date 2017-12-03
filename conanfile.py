@@ -46,12 +46,10 @@ class FreeImageConan(ConanFile):
 
     def build(self):
         self.apply_patches()
-        cmake = CMake(self.settings)
-        options = {
-            'BUILD_SHARED_LIBS': self.options.shared
-        }
-        cmake.configure(self, build_dir=self.UNZIPPED_DIR, source_dir='.', defs=options)
-        cmake.build(self)
+        cmake = CMake(self)
+        cmake.definitions['BUILD_SHARED_LIBS'] = self.options.shared
+        cmake.configure(build_dir=self.UNZIPPED_DIR, source_dir='.')
+        cmake.build()
 
     def package(self):
         include_dir = path.join(self.UNZIPPED_DIR, 'Source')
