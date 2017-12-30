@@ -1,5 +1,4 @@
-from conans import ConanFile, CMake, ConfigureEnvironment
-from conans.tools import download, check_sha256, unzip, replace_in_file
+from conans import ConanFile, CMake, tools
 import os
 from os import path
 from shutil import copy, copyfile
@@ -39,9 +38,9 @@ class FreeImageConan(ConanFile):
     def source(self):
         zip_name = self.name + ".zip"
 
-        download(self.DOWNLOAD_LINK, zip_name)
-        check_sha256(zip_name, self.FILE_SHA)
-        unzip(zip_name)
+        tools.download(self.DOWNLOAD_LINK, zip_name)
+        tools.check_sha256(zip_name, self.FILE_SHA)
+        tools.unzip(zip_name)
         os.unlink(zip_name)
 
     def build(self):
@@ -81,13 +80,13 @@ class FreeImageConan(ConanFile):
         self.patch_android_neon_issues()
 
         # Don't use webp/jxr with cmake build
-        replace_in_file(path.join(self.UNZIPPED_DIR, 'Source/FreeImage/Plugin.cpp'), 's_plugins->AddNode(InitWEBP);', '')
-        replace_in_file(path.join(self.UNZIPPED_DIR, 'Source/FreeImage/Plugin.cpp'), 's_plugins->AddNode(InitJXR);', '')
+        tools.replace_in_file(path.join(self.UNZIPPED_DIR, 'Source/FreeImage/Plugin.cpp'), 's_plugins->AddNode(InitWEBP);', '')
+        tools.replace_in_file(path.join(self.UNZIPPED_DIR, 'Source/FreeImage/Plugin.cpp'), 's_plugins->AddNode(InitJXR);', '')
         # snprintf was added in VS2015
         if self.settings.compiler == "Visual Studio" and int(str(self.settings.compiler.version)) >= 14:
-            replace_in_file(path.join(self.UNZIPPED_DIR, 'Source/LibRawLite/internal/defines.h'), '#define snprintf _snprintf', '')
-            replace_in_file(path.join(self.UNZIPPED_DIR, 'Source/ZLib/gzguts.h'), '#  define snprintf _snprintf', '')
-            replace_in_file(path.join(self.UNZIPPED_DIR, 'Source/LibTIFF4/tif_config.h'), '#define snprintf _snprintf', '')
+            tools.replace_in_file(path.join(self.UNZIPPED_DIR, 'Source/LibRawLite/internal/defines.h'), '#define snprintf _snprintf', '')
+            tools.replace_in_file(path.join(self.UNZIPPED_DIR, 'Source/ZLib/gzguts.h'), '#  define snprintf _snprintf', '')
+            tools.replace_in_file(path.join(self.UNZIPPED_DIR, 'Source/LibTIFF4/tif_config.h'), '#define snprintf _snprintf', '')
 
     def patch_android_swab_issues(self):
         librawlite = path.join(self.UNZIPPED_DIR, "Source", "LibRawLite")
@@ -99,7 +98,7 @@ class FreeImageConan(ConanFile):
 
         for f in missing_swab_files:
             self.output.info("patching file '%s'" % f)
-            replace_in_file(f, "#include <unistd.h>", replaced_include)
+            tools.replace_in_file(f, "#include <unistd.h>", replaced_include)
 
     def patch_android_neon_issues(self):
         # avoid using neon
@@ -107,7 +106,7 @@ class FreeImageConan(ConanFile):
         rm_neon_files = [   path.join(libwebp_src, "dsp", "dsp.h") ]
         for f in rm_neon_files:
             self.output.info("patching file '%s'" % f)
-            replace_in_file(f, "#define WEBP_ANDROID_NEON", "")
+            tools.replace_in_file(f, "#define WEBP_ANDROID_NEON", "")
 
     def copy_tree(self, src_root, dst_root):
 #        for p in self.patches:
