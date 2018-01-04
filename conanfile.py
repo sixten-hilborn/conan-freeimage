@@ -1,4 +1,4 @@
-from conans import ConanFile, CMake, tools
+from conans import ConanFile, CMake, AutoToolsBuildEnvironment, tools
 import os
 from os import path
 from shutil import copy, copyfile
@@ -16,11 +16,15 @@ class FreeImageConan(ConanFile):
 
     options = {
         "shared"          : [True, False],
-        "use_cxx_wrapper" : [True, False]
+        "use_cxx_wrapper" : [True, False],
+
+        # if set, build library without "version number" (eg.: not generate libfreeimage-3-17.0.so)
+        "no_soname"       : [True, False]
     }
     default_options = (
         "shared=False",
-        "use_cxx_wrapper=True"
+        "use_cxx_wrapper=True",
+        "no_soname=False"
     )
 
     exports = ("CMakeLists.txt", "patches/*")
@@ -28,14 +32,22 @@ class FreeImageConan(ConanFile):
     # Downloading from sourceforge
     REPO = "http://downloads.sourceforge.net/project/freeimage/"
     DOWNLOAD_LINK = REPO + "Source%20Distribution/3.17.0/FreeImage3170.zip"
-    # Folder inside the zip
-    UNZIPPED_DIR = "FreeImage"
+    #Folder inside the zip
+    SRCDIR = "FreeImage"
     FILE_SHA = 'fbfc65e39b3d4e2cb108c4ffa8c41fd02c07d4d436c594fff8dab1a6d5297f89'
 
     def configure(self):
-        self.options.use_cxx_wrapper = False
+        if self.settings.os == "Android":
+            self.options.no_soname = True
+
+        if self.settings.compiler == "Visual Studio":
+            self.options.use_cxx_wrapper = False
 
     def source(self):
+        self.download_source()
+        self.apply_patches()
+
+    def download_source(self):
         zip_name = self.name + ".zip"
 
         tools.download(self.DOWNLOAD_LINK, zip_name)
@@ -44,52 +56,119 @@ class FreeImageConan(ConanFile):
         os.unlink(zip_name)
 
     def build(self):
-        self.apply_patches()
+        if self.settings.compiler == "Visual Studio":
+            self.build_visualstudio()
+        else:
+            self.build_make()
+
+    def build_visualstudio(self):
         cmake = CMake(self)
-        cmake.definitions['BUILD_SHARED_LIBS'] = self.options.shared
-        cmake.configure(build_dir=self.UNZIPPED_DIR, source_dir='.')
+        cmake.configure(build_folder='build', source_folder=self.SRCDIR)
         cmake.build()
 
+    def build_make(self):
+        with tools.environment_append(self.make_env()):
+            self.make_and_install()
+
+    def make_and_install(self):
+        options= "" if not self.options.use_cxx_wrapper else "-f Makefile.fip"
+
+        make_cmd = "make %s" % (options)
+
+        self.print_and_run(make_cmd               , cwd=self.SRCDIR)
+        self.print_and_run(make_cmd + " install"  , cwd=self.SRCDIR)
+
     def package(self):
-        include_dir = path.join(self.UNZIPPED_DIR, 'Source')
+        if self.settings.compiler != "Visual Studio":
+            self.output.info("files already installed in build step")
+            return
+
+        include_dir = path.join(self.SRCDIR, 'Source')
         self.copy("FreeImage.h", dst="include", src=include_dir)
-        self.copy("*.lib", dst="lib", src=self.UNZIPPED_DIR, keep_path=False)
-        self.copy("*.a", dst="lib", src=self.UNZIPPED_DIR, keep_path=False)
-        self.copy("*.so", dst="lib", src=self.UNZIPPED_DIR, keep_path=False)
-        self.copy("*.dylib", dst="lib", src=self.UNZIPPED_DIR, keep_path=False)
-        self.copy("*.dll", dst="bin", src=self.UNZIPPED_DIR, keep_path=False)
+        self.copy("*.lib", dst="lib", keep_path=False)
+        self.copy("*.a", dst="lib", keep_path=False)
+        self.copy("*.so", dst="lib", keep_path=False)
+        self.copy("*.dylib", dst="lib", keep_path=False)
+        self.copy("*.dll", dst="bin", keep_path=False)
+
 
     def package_info(self):
-        self.cpp_info.libs = ["FreeImage"]
-
         if self.options.use_cxx_wrapper:
             self.cpp_info.libs.append("freeimageplus")
+        else:
+            self.cpp_info.libs.append("freeimage")
+
         if not self.options.shared:
             self.cpp_info.defines.append("FREEIMAGE_LIB")
 
+
     ################################ Helpers ######################################
+
+
+    def print_and_run(self, cmd, **kw):
+        cwd_ = "[%s] " % kw.get('cwd') if 'cwd' in kw else ''
+
+        self.output.info(cwd_ + str(cmd))
+        self.run(cmd, **kw)
+
+    def make_env(self):
+        env_build = AutoToolsBuildEnvironment(self)
+
+        env = env_build.vars
+
+        # AutoToolsBuildEnvironment sets CFLAGS and CXXFLAGS, so the default value
+        # on the makefile is overwriten. So, we set here the default values again
+        env["CFLAGS"] += " -O3 -fPIC -fexceptions -fvisibility=hidden"
+        env["CXXFLAGS"] += " -O3 -fPIC -fexceptions -fvisibility=hidden -Wno-ctor-dtor-privacy"
+
+        if self.options.shared: #valid only for modified makefiles
+            env["BUILD_SHARED"] = "1"
+        if self.settings.os == "Android":
+            env["NO_SWAB"] = "1"
+            env["ANDROID"] = "1"
+
+            if not os.environ.get('ANDROID_NDK_HOME'):
+                env['ANDROID_NDK_HOME'] = self.get_ndk_home()
+
+        if self.options.no_soname:
+            env["NO_SONAME"] = "1"
+
+        if not hasattr(self, 'package_folder'):
+            self.package_folder = "dist"
+
+        env["DESTDIR"]    = self.package_folder
+        env["INCDIR"]     = path.join(self.package_folder, "include")
+        env["INSTALLDIR"] = path.join(self.package_folder, "lib")
+
+        return env
+
+    def get_ndk_home(self):
+        android_toolchain_opt = self.options["android-toolchain"]
+        android_ndk_info = self.deps_cpp_info["android-ndk"]
+        if android_toolchain_opt and android_toolchain_opt.ndk_path:
+            return android_toolchain_opt.ndk_path
+        elif android_ndk_info:
+            return android_ndk_info.rootpath
+
+        self.output.warn("Could not find ndk home path")
+
+        return None
 
     def apply_patches(self):
         self.output.info("Applying patches")
 
         #Copy "patch" files
-        copy('CMakeLists.txt', self.UNZIPPED_DIR)
-        self.copy_tree("patches", self.UNZIPPED_DIR)
+        copy('CMakeLists.txt', self.SRCDIR)
+        self.copy_tree("patches", self.SRCDIR)
 
         self.patch_android_swab_issues()
         self.patch_android_neon_issues()
 
-        # Don't use webp/jxr with cmake build
-        tools.replace_in_file(path.join(self.UNZIPPED_DIR, 'Source/FreeImage/Plugin.cpp'), 's_plugins->AddNode(InitWEBP);', '')
-        tools.replace_in_file(path.join(self.UNZIPPED_DIR, 'Source/FreeImage/Plugin.cpp'), 's_plugins->AddNode(InitJXR);', '')
-        # snprintf was added in VS2015
-        if self.settings.compiler == "Visual Studio" and int(str(self.settings.compiler.version)) >= 14:
-            tools.replace_in_file(path.join(self.UNZIPPED_DIR, 'Source/LibRawLite/internal/defines.h'), '#define snprintf _snprintf', '')
-            tools.replace_in_file(path.join(self.UNZIPPED_DIR, 'Source/ZLib/gzguts.h'), '#  define snprintf _snprintf', '')
-            tools.replace_in_file(path.join(self.UNZIPPED_DIR, 'Source/LibTIFF4/tif_config.h'), '#define snprintf _snprintf', '')
+        if self.settings.compiler == "Visual Studio":
+            self.patch_visual_studio()
 
     def patch_android_swab_issues(self):
-        librawlite = path.join(self.UNZIPPED_DIR, "Source", "LibRawLite")
+        librawlite = path.join(self.SRCDIR, "Source", "LibRawLite")
         missing_swab_files = [
             path.join(librawlite, "dcraw", "dcraw.c"),
             path.join(librawlite, "internal", "defines.h")
@@ -102,23 +181,30 @@ class FreeImageConan(ConanFile):
 
     def patch_android_neon_issues(self):
         # avoid using neon
-        libwebp_src = path.join(self.UNZIPPED_DIR, "Source", "LibWebP", "src")
+        libwebp_src = path.join(self.SRCDIR, "Source", "LibWebP", "src")
         rm_neon_files = [   path.join(libwebp_src, "dsp", "dsp.h") ]
         for f in rm_neon_files:
             self.output.info("patching file '%s'" % f)
             tools.replace_in_file(f, "#define WEBP_ANDROID_NEON", "")
 
+    def patch_visual_studio(self):
+        tools.replace_in_file(path.join(self.SRCDIR, 'Source/FreeImage/Plugin.cpp'), 's_plugins->AddNode(InitWEBP);', '')
+        tools.replace_in_file(path.join(self.SRCDIR, 'Source/FreeImage/Plugin.cpp'), 's_plugins->AddNode(InitJXR);', '')
+        # snprintf was added in VS2015
+        if self.settings.compiler.version >= 14:
+            tools.replace_in_file(path.join(self.SRCDIR, 'Source/LibRawLite/internal/defines.h'), '#define snprintf _snprintf', '')
+            tools.replace_in_file(path.join(self.SRCDIR, 'Source/ZLib/gzguts.h'), '#  define snprintf _snprintf', '')
+            tools.replace_in_file(path.join(self.SRCDIR, 'Source/LibTIFF4/tif_config.h'), '#define snprintf _snprintf', '')
+
     def copy_tree(self, src_root, dst_root):
-#        for p in self.patches:
-#        for p in os.listdir('patches'):
         for root, dirs, files in os.walk(src_root):
             for d in dirs:
                 dst_dir = path.join(dst_root, d)
                 if not path.exists(dst_dir):
                     os.mkdir(dst_dir)
-                    
+
                 self.copy_tree(path.join(root, d), dst_dir)
-            
+
             for f in files:
                 copyfile(path.join(root, f), path.join(dst_root, f))
 
