@@ -1,19 +1,30 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from conans import ConanFile, CMake, AutoToolsBuildEnvironment, tools
 import os
+import shutil
 from os import path
-from shutil import copy, copyfile
 
 
 class FreeImageConan(ConanFile):
     name = "freeimage"
     version = "3.17.0"
-    license = "FIPL(http://freeimage.sourceforge.net/freeimage-license.txt)", "GPLv2", "GPLv3"
+    url = "https://github.com/sixten-hilborn/conan-freeimage"
     description = "Open source image loading library"
-
-    url = "https://github.com/sixten-hilborn/freeimage-conan"
-    generators = "cmake"
-    settings = "os", "compiler", "arch", "build_type"
-
+    
+    # Indicates License type of the packaged library
+    license = "FIPL(http://freeimage.sourceforge.net/freeimage-license.txt)", "GPLv2", "GPLv3"
+    
+    # Packages the license for the conanfile.py
+    exports = ["LICENSE.md"]
+    
+    # Remove following lines if the target lib does not use cmake.
+    exports_sources = ["CMakeLists.txt", "patches/*"]
+    generators = "cmake" 
+    
+    # Options may need to change depending on the packaged library. 
+    settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared"          : [True, False],
         "use_cxx_wrapper" : [True, False],
@@ -27,14 +38,12 @@ class FreeImageConan(ConanFile):
         "no_soname=False"
     )
 
-    exports = ("CMakeLists.txt", "patches/*")
+    # Custom attributes for Bincrafters recipe conventions
+    source_subfolder = "source_subfolder"
+    build_subfolder = "build_subfolder"
 
-    # Downloading from sourceforge
-    REPO = "http://downloads.sourceforge.net/project/freeimage/"
-    DOWNLOAD_LINK = REPO + "Source%20Distribution/3.17.0/FreeImage3170.zip"
-    #Folder inside the zip
-    SRCDIR = "FreeImage"
-    FILE_SHA = 'fbfc65e39b3d4e2cb108c4ffa8c41fd02c07d4d436c594fff8dab1a6d5297f89'
+    short_paths = True
+
 
     def configure(self):
         if self.settings.os == "Android":
@@ -43,17 +52,18 @@ class FreeImageConan(ConanFile):
         if self.settings.compiler == "Visual Studio":
             self.options.use_cxx_wrapper = False
 
+
     def source(self):
-        self.download_source()
+        source_url = "http://downloads.sourceforge.net/project/freeimage"
+        tools.get(
+            "{0}/Source%20Distribution/{1}/FreeImage{2}.zip".format(source_url, self.version, self.version.replace('.', '')),
+            sha256='fbfc65e39b3d4e2cb108c4ffa8c41fd02c07d4d436c594fff8dab1a6d5297f89')
+
+        #Rename to "source_subfolder" is a convention to simplify later steps
+        os.rename("FreeImage", self.source_subfolder)
+
         self.apply_patches()
 
-    def download_source(self):
-        zip_name = self.name + ".zip"
-
-        tools.download(self.DOWNLOAD_LINK, zip_name)
-        tools.check_sha256(zip_name, self.FILE_SHA)
-        tools.unzip(zip_name)
-        os.unlink(zip_name)
 
     def build(self):
         if self.settings.compiler == "Visual Studio":
@@ -63,8 +73,9 @@ class FreeImageConan(ConanFile):
 
     def build_visualstudio(self):
         cmake = CMake(self)
-        cmake.configure(build_folder='build', source_folder=self.SRCDIR)
+        cmake.configure(build_folder=self.build_subfolder, source_folder=self.source_subfolder)
         cmake.build()
+        cmake.install()
 
     def build_make(self):
         with tools.environment_append(self.make_env()):
@@ -75,29 +86,27 @@ class FreeImageConan(ConanFile):
 
         make_cmd = "make %s" % (options)
 
-        self.print_and_run(make_cmd               , cwd=self.SRCDIR)
-        self.print_and_run(make_cmd + " install"  , cwd=self.SRCDIR)
+        self.print_and_run(make_cmd               , cwd=self.source_subfolder)
+        self.print_and_run(make_cmd + " install"  , cwd=self.source_subfolder)
+
 
     def package(self):
+        self.copy(pattern="LICENSE")
         if self.settings.compiler != "Visual Studio":
             self.output.info("files already installed in build step")
             return
 
-        include_dir = path.join(self.SRCDIR, 'Source')
+        include_dir = path.join(self.source_subfolder, 'Source')
         self.copy("FreeImage.h", dst="include", src=include_dir)
         self.copy("*.lib", dst="lib", keep_path=False)
         self.copy("*.a", dst="lib", keep_path=False)
-        self.copy("*.so", dst="lib", keep_path=False)
+        self.copy("*.so*", dst="lib", keep_path=False)
         self.copy("*.dylib", dst="lib", keep_path=False)
         self.copy("*.dll", dst="bin", keep_path=False)
 
 
     def package_info(self):
-        if self.options.use_cxx_wrapper:
-            self.cpp_info.libs.append("freeimageplus")
-        else:
-            self.cpp_info.libs.append("freeimage")
-
+        self.cpp_info.libs = tools.collect_libs(self)
         if not self.options.shared:
             self.cpp_info.defines.append("FREEIMAGE_LIB")
 
@@ -158,8 +167,8 @@ class FreeImageConan(ConanFile):
         self.output.info("Applying patches")
 
         #Copy "patch" files
-        copy('CMakeLists.txt', self.SRCDIR)
-        self.copy_tree("patches", self.SRCDIR)
+        shutil.copy('CMakeLists.txt', self.source_subfolder)
+        self.copy_tree("patches", self.source_subfolder)
 
         self.patch_android_swab_issues()
         self.patch_android_neon_issues()
@@ -168,7 +177,7 @@ class FreeImageConan(ConanFile):
             self.patch_visual_studio()
 
     def patch_android_swab_issues(self):
-        librawlite = path.join(self.SRCDIR, "Source", "LibRawLite")
+        librawlite = path.join(self.source_subfolder, "Source", "LibRawLite")
         missing_swab_files = [
             path.join(librawlite, "dcraw", "dcraw.c"),
             path.join(librawlite, "internal", "defines.h")
@@ -181,20 +190,20 @@ class FreeImageConan(ConanFile):
 
     def patch_android_neon_issues(self):
         # avoid using neon
-        libwebp_src = path.join(self.SRCDIR, "Source", "LibWebP", "src")
+        libwebp_src = path.join(self.source_subfolder, "Source", "LibWebP", "src")
         rm_neon_files = [   path.join(libwebp_src, "dsp", "dsp.h") ]
         for f in rm_neon_files:
             self.output.info("patching file '%s'" % f)
             tools.replace_in_file(f, "#define WEBP_ANDROID_NEON", "")
 
     def patch_visual_studio(self):
-        tools.replace_in_file(path.join(self.SRCDIR, 'Source/FreeImage/Plugin.cpp'), 's_plugins->AddNode(InitWEBP);', '')
-        tools.replace_in_file(path.join(self.SRCDIR, 'Source/FreeImage/Plugin.cpp'), 's_plugins->AddNode(InitJXR);', '')
+        tools.replace_in_file(path.join(self.source_subfolder, 'Source/FreeImage/Plugin.cpp'), 's_plugins->AddNode(InitWEBP);', '')
+        tools.replace_in_file(path.join(self.source_subfolder, 'Source/FreeImage/Plugin.cpp'), 's_plugins->AddNode(InitJXR);', '')
         # snprintf was added in VS2015
         if self.settings.compiler.version >= 14:
-            tools.replace_in_file(path.join(self.SRCDIR, 'Source/LibRawLite/internal/defines.h'), '#define snprintf _snprintf', '')
-            tools.replace_in_file(path.join(self.SRCDIR, 'Source/ZLib/gzguts.h'), '#  define snprintf _snprintf', '')
-            tools.replace_in_file(path.join(self.SRCDIR, 'Source/LibTIFF4/tif_config.h'), '#define snprintf _snprintf', '')
+            tools.replace_in_file(path.join(self.source_subfolder, 'Source/LibRawLite/internal/defines.h'), '#define snprintf _snprintf', '')
+            tools.replace_in_file(path.join(self.source_subfolder, 'Source/ZLib/gzguts.h'), '#  define snprintf _snprintf', '')
+            tools.replace_in_file(path.join(self.source_subfolder, 'Source/LibTIFF4/tif_config.h'), '#define snprintf _snprintf', '')
 
     def copy_tree(self, src_root, dst_root):
         for root, dirs, files in os.walk(src_root):
@@ -206,6 +215,6 @@ class FreeImageConan(ConanFile):
                 self.copy_tree(path.join(root, d), dst_dir)
 
             for f in files:
-                copyfile(path.join(root, f), path.join(dst_root, f))
+                shutil.copyfile(path.join(root, f), path.join(dst_root, f))
 
             break
