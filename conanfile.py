@@ -75,7 +75,6 @@ class FreeImageConan(ConanFile):
         cmake = CMake(self)
         cmake.configure(build_folder=self.build_subfolder, source_folder=self.source_subfolder)
         cmake.build()
-        cmake.install()
 
     def build_make(self):
         with tools.environment_append(self.make_env()):
