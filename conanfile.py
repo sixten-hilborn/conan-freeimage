@@ -175,6 +175,8 @@ class FreeImageConan(ConanFile):
         self.patch_android_swab_issues()
         self.patch_android_neon_issues()
 
+        if self.is_cmake_build():
+            self.patch_cmake()
         if self.settings.compiler == "Visual Studio":
             self.patch_visual_studio()
 
@@ -198,9 +200,11 @@ class FreeImageConan(ConanFile):
             self.output.info("patching file '%s'" % f)
             tools.replace_in_file(f, "#define WEBP_ANDROID_NEON", "")
 
-    def patch_visual_studio(self):
+    def patch_cmake(self):
         tools.replace_in_file(path.join(self.source_subfolder, 'Source/FreeImage/Plugin.cpp'), 's_plugins->AddNode(InitWEBP);', '')
         tools.replace_in_file(path.join(self.source_subfolder, 'Source/FreeImage/Plugin.cpp'), 's_plugins->AddNode(InitJXR);', '')
+
+    def patch_visual_studio(self):
         # snprintf was added in VS2015
         if self.settings.compiler.version >= 14:
             tools.replace_in_file(path.join(self.source_subfolder, 'Source/LibRawLite/internal/defines.h'), '#define snprintf _snprintf', '')
