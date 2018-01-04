@@ -49,7 +49,7 @@ class FreeImageConan(ConanFile):
         if self.settings.os == "Android":
             self.options.no_soname = True
 
-        if self.settings.compiler == "Visual Studio":
+        if self.is_cmake_build():
             self.options.use_cxx_wrapper = False
 
 
@@ -66,12 +66,12 @@ class FreeImageConan(ConanFile):
 
 
     def build(self):
-        if self.settings.compiler == "Visual Studio":
-            self.build_visualstudio()
+        if self.is_cmake_build():
+            self.build_cmake()
         else:
             self.build_make()
 
-    def build_visualstudio(self):
+    def build_cmake(self):
         cmake = CMake(self)
         cmake.configure(build_folder=self.build_subfolder, source_folder=self.source_subfolder)
         cmake.build()
@@ -79,6 +79,9 @@ class FreeImageConan(ConanFile):
     def build_make(self):
         with tools.environment_append(self.make_env()):
             self.make_and_install()
+
+    def is_cmake_build(self):
+        return self.settings.compiler in ["Visual Studio", "apple-clang"]
 
     def make_and_install(self):
         options= "" if not self.options.use_cxx_wrapper else "-f Makefile.fip"
