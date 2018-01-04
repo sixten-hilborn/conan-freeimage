@@ -94,7 +94,7 @@ class FreeImageConan(ConanFile):
 
     def package(self):
         self.copy(pattern="LICENSE")
-        if self.settings.compiler != "Visual Studio":
+        if not self.is_cmake_build():
             self.output.info("files already installed in build step")
             return
 
