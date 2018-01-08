@@ -62,10 +62,9 @@ class FreeImageConan(ConanFile):
         #Rename to "source_subfolder" is a convention to simplify later steps
         os.rename("FreeImage", self.source_subfolder)
 
-        self.apply_patches()
-
 
     def build(self):
+        self.apply_patches()
         if self.is_cmake_build():
             self.build_cmake()
         else:
