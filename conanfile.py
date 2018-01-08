@@ -210,6 +210,8 @@ class FreeImageConan(ConanFile):
             tools.replace_in_file(path.join(self.source_subfolder, 'Source/LibRawLite/internal/defines.h'), '#define snprintf _snprintf', '')
             tools.replace_in_file(path.join(self.source_subfolder, 'Source/ZLib/gzguts.h'), '#  define snprintf _snprintf', '')
             tools.replace_in_file(path.join(self.source_subfolder, 'Source/LibTIFF4/tif_config.h'), '#define snprintf _snprintf', '')
+        else:
+            tools.replace_in_file(path.join(self.source_subfolder, 'Source/LibRawLite/src/libraw_cxx.cpp'), 'snprintf', '_snprintf')
 
     def copy_tree(self, src_root, dst_root):
         for root, dirs, files in os.walk(src_root):
