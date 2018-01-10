@@ -206,12 +206,10 @@ class FreeImageConan(ConanFile):
 
     def patch_visual_studio(self):
         # snprintf was added in VS2015
-        if self.settings.compiler.version >= 14:
+        if int(self.settings.compiler.version.value) >= 14:
             tools.replace_in_file(path.join(self.source_subfolder, 'Source/LibRawLite/internal/defines.h'), '#define snprintf _snprintf', '')
             tools.replace_in_file(path.join(self.source_subfolder, 'Source/ZLib/gzguts.h'), '#  define snprintf _snprintf', '')
             tools.replace_in_file(path.join(self.source_subfolder, 'Source/LibTIFF4/tif_config.h'), '#define snprintf _snprintf', '')
-        else:
-            tools.replace_in_file(path.join(self.source_subfolder, 'Source/LibRawLite/src/libraw_cxx.cpp'), 'snprintf', '_snprintf')
 
     def copy_tree(self, src_root, dst_root):
         for root, dirs, files in os.walk(src_root):
