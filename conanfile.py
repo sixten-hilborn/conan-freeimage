@@ -42,6 +42,11 @@ class FreeImageConan(ConanFile):
     source_subfolder = "source_subfolder"
     build_subfolder = "build_subfolder"
 
+    # Use version ranges for dependencies unless there's a reason not to
+    requires = (
+        "zlib/[>=1.2.11]@conan/stable"
+    )
+
     short_paths = True
 
 
@@ -172,6 +177,8 @@ class FreeImageConan(ConanFile):
         shutil.copy('CMakeLists.txt', self.source_subfolder)
         self.copy_tree("patches", self.source_subfolder)
 
+        self.patch_zlib()
+
         self.patch_android_swab_issues()
         self.patch_android_neon_issues()
 
@@ -179,6 +186,16 @@ class FreeImageConan(ConanFile):
             self.patch_cmake()
         if self.settings.compiler == "Visual Studio":
             self.patch_visual_studio()
+
+    def patch_zlib(self):
+        # Remove ZLib directory since we're using conan for zlib
+        shutil.rmtree(path.join(self.source_subfolder, 'Source/ZLib'))
+
+        tools.replace_in_file(path.join(self.source_subfolder, 'Source/FreeImage/ZLibInterface.cpp'), '#include "../ZLib/zlib.h"', '#include <zlib.h>')
+        tools.replace_in_file(path.join(self.source_subfolder, 'Source/FreeImage/ZLibInterface.cpp'), '#include "../ZLib/zutil.h"', '#include <zutil.h>')
+        tools.replace_in_file(path.join(self.source_subfolder, 'Source/FreeImage/PluginPNG.cpp'), '#include "../ZLib/zlib.h"', '#include <zlib.h>')
+        tools.replace_in_file(path.join(self.source_subfolder, 'Source/LibTIFF4/tif_pixarlog.c'), '#include "../ZLib/zlib.h"', '#include <zlib.h>')
+        tools.replace_in_file(path.join(self.source_subfolder, 'Source/LibTIFF4/tif_zip.c'), '#include "../ZLib/zlib.h"', '#include <zlib.h>')
 
     def patch_android_swab_issues(self):
         librawlite = path.join(self.source_subfolder, "Source", "LibRawLite")
@@ -208,7 +225,6 @@ class FreeImageConan(ConanFile):
         # snprintf was added in VS2015
         if int(self.settings.compiler.version.value) >= 14:
             tools.replace_in_file(path.join(self.source_subfolder, 'Source/LibRawLite/internal/defines.h'), '#define snprintf _snprintf', '')
-            tools.replace_in_file(path.join(self.source_subfolder, 'Source/ZLib/gzguts.h'), '#  define snprintf _snprintf', '')
             tools.replace_in_file(path.join(self.source_subfolder, 'Source/LibTIFF4/tif_config.h'), '#define snprintf _snprintf', '')
 
     def copy_tree(self, src_root, dst_root):

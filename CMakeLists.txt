@@ -563,59 +563,37 @@ set(FreeImage_SOURCES
 	Source/Quantizers.h
 	Source/ToneMapping.h
 	Source/Utilities.h
-	Source/ZLib/adler32.c
-	Source/ZLib/compress.c
-	Source/ZLib/crc32.c
-	Source/ZLib/crc32.h
-	Source/ZLib/deflate.c
-	Source/ZLib/deflate.h
-    Source/ZLib/gzclose.c
-    Source/ZLib/gzguts.h
-    Source/ZLib/gzlib.c
-    Source/ZLib/gzread.c
-    Source/ZLib/gzwrite.c
-	Source/ZLib/infback.c
-	Source/ZLib/inffast.c
-	Source/ZLib/inffast.h
-	Source/ZLib/inffixed.h
-	Source/ZLib/inflate.c
-	Source/ZLib/inflate.h
-	Source/ZLib/inftrees.c
-	Source/ZLib/inftrees.h
-	Source/ZLib/trees.c
-	Source/ZLib/trees.h
-	Source/ZLib/uncompr.c
-	Source/ZLib/zconf.h
-	Source/ZLib/zlib.h
-	Source/ZLib/zutil.c
-	Source/ZLib/zutil.h
 )
 
-# need include directories for FreeImage and all the sub libs
-include_directories(.)
-include_directories(Source)
-include_directories(Source/FreeImageToolkit)
-include_directories(Source/LibJPEG)
-include_directories(Source/LibMNG)
-include_directories(Source/LibOpenJPEG)
-include_directories(Source/LibPNG)
-include_directories(Source/LibRawLite)
-include_directories(Source/LibTIFF)
-include_directories(Source/OpenEXR)
-include_directories(Source/OpenEXR/Half)
-include_directories(Source/OpenEXR/Iex)
-include_directories(Source/OpenEXR/IlmImf)
-include_directories(Source/OpenEXR/IlmThread)
-include_directories(Source/OpenEXR/Imath)
-include_directories(Source/ZLib)
-
-add_definitions(-DOPJ_STATIC -DLIBRAW_NODLL -DLIBRAW_LIBRARY_BUILD -DNO_LCMS -DUSE_JPIP)
-if(BUILD_SHARED_LIBS)
-	add_definitions(-DFREEIMAGE_EXPORTS)
-else()
-	add_definitions(-DFREEIMAGE_LIB)
-endif()
 add_library(FreeImage ${FreeImage_SOURCES})
+
+# need include directories for FreeImage and all the sub libs
+target_include_directories(FreeImage PRIVATE
+	.
+	Source
+	Source/FreeImageToolkit
+	Source/LibJPEG
+	Source/LibMNG
+	Source/LibOpenJPEG
+	Source/LibPNG
+	Source/LibRawLite
+	Source/LibTIFF
+	Source/OpenEXR
+	Source/OpenEXR/Half
+	Source/OpenEXR/Iex
+	Source/OpenEXR/IlmImf
+	Source/OpenEXR/IlmThread
+	Source/OpenEXR/Imath
+)
+
+target_compile_definitions(FreeImage PRIVATE OPJ_STATIC LIBRAW_NODLL LIBRAW_LIBRARY_BUILD NO_LCMS USE_JPIP)
+if(BUILD_SHARED_LIBS)
+	target_compile_definitions(FreeImage PUBLIC FREEIMAGE_EXPORTS)
+else()
+	target_compile_definitions(FreeImage PUBLIC FREEIMAGE_LIB)
+endif()
+
+target_link_libraries(FreeImage PRIVATE CONAN_PKG::zlib)
 
 if (APPLE)
 	set_target_properties(FreeImage PROPERTIES XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO")
