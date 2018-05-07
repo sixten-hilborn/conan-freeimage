@@ -85,7 +85,8 @@ class FreeImageConan(ConanFile):
             self.make_and_install()
 
     def is_cmake_build(self):
-        return self.settings.compiler in ["Visual Studio", "apple-clang"] or self.settings.os == 'Windows'
+        #return self.settings.compiler in ["Visual Studio", "apple-clang"] or self.settings.os == 'Windows'
+        return True
 
     def make_and_install(self):
         options= "" if not self.options.use_cxx_wrapper else "-f Makefile.fip"
