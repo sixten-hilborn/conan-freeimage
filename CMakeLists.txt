@@ -606,6 +606,11 @@ endif()
 # With -std=c++11 (default from GCC 6.1) or higher, GCC fails to compile due to an invalid narrowing conversion
 if (CMAKE_COMPILER_IS_GNUCXX)
 	target_compile_options(FreeImage PUBLIC -Wno-narrowing)
+
+	# Ignore deprecated warnings in gcc 7+ regarding throw(...)
+	if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7)
+		target_compile_options(FreeImage PRIVATE -Wno-deprecated)
+	endif()
 endif()
 
 
