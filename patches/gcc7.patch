@@ -1,0 +1,20 @@
+diff --git a/Source/LibRawLite/internal/dcraw_common.cpp b/Source/LibRawLite/internal/dcraw_common.cpp
+index 217133a..bf6e9ba 100644
+--- a/Source/LibRawLite/internal/dcraw_common.cpp
++++ b/Source/LibRawLite/internal/dcraw_common.cpp
+@@ -5543,10 +5543,14 @@ static float powf_lim(float a, float b, float limup)
+ {
+   return (b>limup || b < -limup)?0.f:powf(a,b);
+ }
+-static float powf64(float a, float b)
++static float powf64(const float a, const float b)
+ {
+   return powf_lim(a,b,64.f);
+ }
++static float powf64(const int a, const int b)
++{
++  return powf64((float)a,(float)b);
++}
+ 
+ 
+ #ifdef LIBRAW_LIBRARY_BUILD

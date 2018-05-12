@@ -178,6 +178,7 @@ class FreeImageConan(ConanFile):
         shutil.copy('CMakeLists.txt', self.source_subfolder)
         self.copy_tree("patches", self.source_subfolder)
 
+        self.patch_gcc7()
         self.patch_zlib()
 
         self.patch_android_swab_issues()
@@ -187,6 +188,9 @@ class FreeImageConan(ConanFile):
             self.patch_cmake()
         if self.settings.compiler == "Visual Studio":
             self.patch_visual_studio()
+
+    def patch_gcc7(self):
+        tools.patch(base_path=self.source_subfolder, patch_file='patches/gcc7.patch')
 
     def patch_zlib(self):
         # Remove ZLib directory since we're using conan for zlib
