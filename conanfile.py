@@ -113,6 +113,7 @@ class FreeImageConan(ConanFile):
 
         #self.patch_android_swab_issues()
 
+        self.patch_cmake()
         if self.settings.compiler == "Visual Studio":
             self.patch_visual_studio()
 
@@ -155,6 +156,10 @@ class FreeImageConan(ConanFile):
         for f in missing_swab_files:
             self.output.info("patching file '%s'" % f)
             tools.replace_in_file(f, "#include <unistd.h>", replaced_include)
+
+
+    def patch_cmake(self):
+        tools.replace_in_file(path.join(self.source_subfolder, 'Source/FreeImage/Plugin.cpp'), 's_plugins->AddNode(InitJXR);', '')
 
     def patch_visual_studio(self):
         # snprintf was added in VS2015

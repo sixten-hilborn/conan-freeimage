@@ -23,11 +23,17 @@ set(LIBRAWLITE_SOURCES
 )
 file(GLOB METADATA_SOURCES Source/Metadata/*.cpp Source/Metadata/*.c)
 
+foreach(src ${FREEIMAGE_SOURCES})
+	if(src MATCHES PluginJXR.cpp)
+		list(REMOVE_ITEM FREEIMAGE_SOURCES "${src}")
+	endif()
+endforeach()
+
 add_library(FreeImage
 	${FREEIMAGE_SOURCES}
 	${FREEIMAGETOOLKIT_SOURCES}
 	${LIBOPENJPEG_SOURCES}
-	${LIBJXR_SOURCES}
+	#${LIBJXR_SOURCES}
 	${LIBRAWLITE_SOURCES}
 	${METADATA_SOURCES}
 	Source/CacheFile.h
