@@ -36,6 +36,7 @@ add_library(FreeImage
 	#${LIBJXR_SOURCES}
 	${LIBRAWLITE_SOURCES}
 	${METADATA_SOURCES}
+	Source/LibJPEG/transupp.c
 	Source/CacheFile.h
 	Source/FreeImage.h
 	Source/FreeImageIO.h
