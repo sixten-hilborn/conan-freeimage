@@ -46,6 +46,7 @@ target_include_directories(FreeImage PRIVATE
 	Source/FreeImageToolkit
 	Source/LibOpenJPEG
 	Source/LibRawLite
+	Source/LibJXR/common/include
 	Source/LibJXR/jxrgluelib
 	Source/LibJXR/image/sys
 #	Source/OpenEXR
