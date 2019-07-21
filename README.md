@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/sixten-hilborn/freeimage-conan.svg?branch=stable/3.17.0)](https://travis-ci.org/sixten-hilborn/freeimage-conan)
-[![Build status](https://ci.appveyor.com/api/projects/status/qwh5ybpkakhn0t85?svg=true)](https://ci.appveyor.com/project/sixten-hilborn/freeimage-conan)
+[![Build Status](https://travis-ci.org/sixten-hilborn/conan-freeimage.svg?branch=stable/3.18.0)](https://travis-ci.org/sixten-hilborn/conan-freeimage)
+[![Build status](https://ci.appveyor.com/api/projects/status/qwh5ybpkakhn0t85/branch/stable/3.18.0?svg=true)](https://ci.appveyor.com/project/sixten-hilborn/freeimage-conan/branch/stable/3.18.0)
 
 # FreeImage-Conan
 
