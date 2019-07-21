@@ -194,10 +194,10 @@ class FreeImageConan(ConanFile):
 
     def patch_zlib(self):
         # Remove ZLib directory since we're using conan for zlib
-        shutil.rmtree(path.join(self.source_subfolder, 'Source/ZLib'))
+        #shutil.rmtree(path.join(self.source_subfolder, 'Source/ZLib'))
 
         tools.replace_in_file(path.join(self.source_subfolder, 'Source/FreeImage/ZLibInterface.cpp'), '#include "../ZLib/zlib.h"', '#include <zlib.h>')
-        tools.replace_in_file(path.join(self.source_subfolder, 'Source/FreeImage/ZLibInterface.cpp'), '#include "../ZLib/zutil.h"', '#include <zutil.h>')
+        #tools.replace_in_file(path.join(self.source_subfolder, 'Source/FreeImage/ZLibInterface.cpp'), '#include "../ZLib/zutil.h"', '#include <zutil.h>')
         tools.replace_in_file(path.join(self.source_subfolder, 'Source/FreeImage/PluginPNG.cpp'), '#include "../ZLib/zlib.h"', '#include <zlib.h>')
         tools.replace_in_file(path.join(self.source_subfolder, 'Source/LibTIFF4/tif_pixarlog.c'), '#include "../ZLib/zlib.h"', '#include <zlib.h>')
         tools.replace_in_file(path.join(self.source_subfolder, 'Source/LibTIFF4/tif_zip.c'), '#include "../ZLib/zlib.h"', '#include <zlib.h>')
