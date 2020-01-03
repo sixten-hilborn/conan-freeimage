@@ -44,12 +44,12 @@ class FreeImageConan(ConanFile):
 
     # Use version ranges for dependencies unless there's a reason not to
     requires = (
-        "zlib/1.2.11@conan/stable",
-        "libjpeg/9c@bincrafters/stable",
-        "libpng/1.6.37@bincrafters/stable",  # Actually 1.6.35 is used by FreeImage 3.18.0, however bincrafters doesn't provide it
-        "libtiff/4.0.9@bincrafters/stable",
+        "zlib/1.2.11",
+        "libjpeg/9c",
+        "libpng/1.6.37",  # Actually 1.6.35 is used by FreeImage 3.18.0, however bincrafters doesn't provide it
+        "libtiff/4.0.9",
         "libwebp/1.0.0@bincrafters/stable",
-        "openexr/2.3.0@conan/stable",  # 2.2.1 is used by FreeImage 3.18.0, however conan community doesn't provide it
+        "openexr/2.3.0",  # 2.2.1 is used by FreeImage 3.18.0, however conan community doesn't provide it
     )
 
     short_paths = True
