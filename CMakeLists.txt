@@ -85,6 +85,10 @@ endif()
 if (CMAKE_COMPILER_IS_GNUCXX)
 	target_compile_options(FreeImage PUBLIC -Wno-narrowing)
 
+	if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6)
+		target_compile_options(FreeImage PRIVATE -std=c++11)
+	endif()
+
 	# Ignore deprecated warnings in gcc 7+ regarding throw(...)
 	if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7)
 		target_compile_options(FreeImage PRIVATE -Wno-deprecated)
