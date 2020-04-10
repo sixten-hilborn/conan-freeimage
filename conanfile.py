@@ -45,7 +45,7 @@ class FreeImageConan(ConanFile):
     # Use version ranges for dependencies unless there's a reason not to
     requires = (
         "zlib/1.2.11",
-        "libjpeg/9c",
+        "libjpeg/9d",
         "libpng/1.6.37",  # Actually 1.6.35 is used by FreeImage 3.18.0, however bincrafters doesn't provide it
         "libtiff/4.0.9",
         "libwebp/1.0.0@bincrafters/stable",
