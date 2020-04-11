@@ -1,5 +1,5 @@
 project(FreeImage)
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.1)
 
 option(BUILD_SHARED_LIBS "Build shared library if true, else build static library" OFF)
 
@@ -73,6 +73,9 @@ endif()
 
 target_link_libraries(FreeImage PRIVATE CONAN_PKG::libjpeg CONAN_PKG::libpng CONAN_PKG::libtiff CONAN_PKG::libwebp CONAN_PKG::openexr CONAN_PKG::zlib)
 
+# Always enable at least C++11, otherwise a compile-time check in the code will fail
+target_compile_features(FreeImage PRIVATE cxx_lambdas)
+
 if (APPLE)
 	set_target_properties(FreeImage PROPERTIES XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO")
 
@@ -84,10 +87,6 @@ endif()
 # With -std=c++11 (default from GCC 6.1) or higher, GCC fails to compile due to an invalid narrowing conversion
 if (CMAKE_COMPILER_IS_GNUCXX)
 	target_compile_options(FreeImage PUBLIC -Wno-narrowing)
-
-	if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6)
-		target_compile_options(FreeImage PRIVATE -std=c++11)
-	endif()
 
 	# Ignore deprecated warnings in gcc 7+ regarding throw(...)
 	if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7)
